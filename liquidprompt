@@ -186,6 +186,7 @@ __lp_source_config() {
     LP_PS1_POSTFIX=${LP_PS1_POSTFIX:-""}
     LP_MARK_KUBECONTEXT=${LP_MARK_KUBECONTEXT:-"⎈"}
     LP_DELIMITER_KUBECONTEXT=${LP_DELIMITER_KUBECONTEXT:-""}
+    LP_MINIMUM_SPACE_AFTER_PROMPT=${LP_MINIMUM_SPACE_AFTER_PROMPT:-0}
 
     LP_ENABLE_PERM=${LP_ENABLE_PERM:-1}
     LP_ENABLE_SHORTEN_PATH=${LP_ENABLE_SHORTEN_PATH:-1}
@@ -2586,6 +2587,31 @@ _lp_title() {
     printf '%s' "${LP_TITLE_CLOSE}${_LP_CLOSE_ESC}"
 }
 
+
+# Get length of a given string, after evaluating escape codes (\u for user, etc)
+__lp_prompt_length()
+{
+    typeset evaluated_ps1
+    typeset printable_ps1="$(_lp_as_text "$1")"
+
+    if (( _LP_SHELL_bash )); then
+        evaluated_ps1=$(printf '%s' "${printable_ps1@P}")
+    else # zsh
+        evaluated_ps1=$(print -P $printable_ps1)
+    fi
+
+    lp_prompt_length=${#evaluated_ps1}
+}
+
+# Calculates the remaining space on a terminal line after prompt has been printed
+__lp_remaining_space()
+{
+    __lp_prompt_length "$1"
+
+    # Modulo terminal width, so we handle the case where prompt is already on a new line
+    lp_remaining_space=$(( $COLUMNS - ( $lp_prompt_length % $COLUMNS ) ))
+}
+
 _lp_formatted_title() {
     (( LP_ENABLE_TITLE )) || return 2
 
@@ -2871,8 +2897,21 @@ _lp_default_theme_prompt_template() {
         # is set.
         PS1+="${LP_VCS}"
 
-        # add return code and prompt mark
-        PS1+="${LP_RUNTIME}${LP_ERR}${LP_MARK_PREFIX}${LP_COLOR_MARK}${LP_MARK}${LP_PS1_POSTFIX}"
+        # add return code
+        PS1+="${LP_RUNTIME}${LP_ERR}"
+
+        # Calculate remaining space
+        __lp_remaining_space "$PS1"
+
+        # determine if we need to add new line before prompt mark
+        if (( LP_MINIMUM_SPACE_AFTER_PROMPT )); then
+            if [[ $lp_remaining_space -lt "$LP_MINIMUM_SPACE_AFTER_PROMPT" ]]; then
+                PS1+=$'\n'
+            fi
+        fi
+
+        # add prompt mark
+        PS1+="${LP_MARK_PREFIX}${LP_COLOR_MARK}${LP_MARK}${LP_PS1_POSTFIX}"
 
         # Get the core sections without prompt escapes and make them into a title.
         _lp_formatted_title "${LP_PS1_PREFIX}${LP_MARK_BRACKET_OPEN}${lp_username_raw-}${lp_hostname_raw+@}${lp_hostname_raw-}${LP_MARK_PERM}${lp_path-}${LP_MARK_BRACKET_CLOSE}${LP_MARK_PREFIX}${lp_smart_mark} ${LP_PS1_POSTFIX}"
@@ -2972,6 +3011,7 @@ prompt_tag() {
         export LP_PS1_PREFIX=
     fi
 }
+
 
 # Activate Liquid Prompt
 prompt_on() {

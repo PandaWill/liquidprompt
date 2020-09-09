@@ -110,6 +110,7 @@ Thanks again to everyone for all of the help and support!
 * Munif Tanjim (@MunifTanjim)
 * Martin Schütte (@mschuett)
 * Sam Pearson (@sagepe)
+* William S. (@PandaWill)
 
 ### Code cleanup
 * Aurélien Requiem (@aureq)

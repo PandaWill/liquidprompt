@@ -702,6 +702,20 @@ function test_is_function {
   unalias not_my_function
 }
 
+function test_remaining_space {
+   typeset test_string="a twenty char string"
+   typeset COLUMNS=100
+
+  # String length less than columns
+  __lp_remaining_space "$test_string"
+  assertEquals 80 $lp_remaining_space
+
+  # String goes over 2 lines
+  COLUMNS=15
+  __lp_remaining_space "$test_string"
+  assertEquals 10 $lp_remaining_space
+}
+
 if [ -n "${ZSH_VERSION-}" ]; then
   SHUNIT_PARENT="$0"
   setopt shwordsplit

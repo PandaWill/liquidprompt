@@ -199,6 +199,10 @@ LP_ENABLE_ERROR=1
 # Ex: ("/root" "/home/me/large-remove-svn-repo")
 LP_DISABLED_VCS_PATHS=()
 
+# Require minimum number of columns in the terminal after the prompt.
+# Default is 0 (off), sensible values are around 20 or 30.
+LP_MINIMUM_SPACE_AFTER_PROMPT=0
+
 # Use a local liquidpromptrc if it exists.
 # Can be helpful if you sync your primary config across machines, or if
 # there's a system-wide config at /etc/liquidpromptrc from which you'd
